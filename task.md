@@ -5,7 +5,7 @@
     - [x] Create `requirements.txt` (streamlit, pandas, plotly)
     - [x] Create main application file `app.py`
     - [x] Create `.streamlit/config.toml` for dark theme
-    - [ ] Initialize Git repository
+    - [x] Initialize Git repository
 
 - [x] **Data Processing Layer (Python)**
     - [x] Implement data loader using `pandas`
@@ -31,8 +31,8 @@
     - [x] **Data View**
         - [x] (Removed per user request)
 
-- [ ] **Workflow & Deployment**
+- [x] **Workflow & Deployment**
     - [x] Verify local execution (`streamlit run app.py`)
-    - [ ] Commit `Data.csv` and code to GitHub
-    - [ ] Deploy to Streamlit Community Cloud
-    - [ ] Document update process (Replace CSV -> Run Local -> Push)
+    - [x] Commit `Data.csv` and code to GitHub
+    - [x] Deploy to Streamlit Community Cloud
+    - [x] Document update process (Replace CSV -> Run Local -> Push)
