@@ -61,8 +61,13 @@ CHART_LAYOUT = dict(
     legend=dict(font=dict(color='#fafafa'))
 )
 
-@st.cache_data
-def load_data():
+def _file_hash():
+    """Return modification time of Data.csv to bust cache when file changes."""
+    import os
+    return os.path.getmtime('Data.csv')
+
+@st.cache_data(ttl=None)
+def load_data(_file_hash):
     """Load and transform the CSV data."""
     df = pd.read_csv('Data.csv')
     df['Date'] = pd.to_datetime(df['Date'], format='%d-%b-%y')
@@ -75,7 +80,7 @@ def load_data():
     return df_pivot
 
 # Load Data
-df = load_data()
+df = load_data(_file_hash())
 
 # Main Title
 st.title("Stock Market Dashboard")
