@@ -50,3 +50,4 @@ streamlit run app.py
 - Added disclaimer at the top of the dashboard
 - Added short descriptive captions below each chart header explaining the visual and how to interpret it
 - Updated Relative Strength Matrix description with detailed explanation and example
+- Fixed stale data on Streamlit Cloud: `@st.cache_data` now uses the CSV file's modification time as a cache key, so the cache automatically refreshes when `Data.csv` is updated

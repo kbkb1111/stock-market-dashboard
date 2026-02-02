@@ -22,14 +22,18 @@ Create a personal Stock Market Dashboard using **Streamlit** to visualize histor
 #### `app.py` (Main Entry Point)
 - **Settings**: `st.set_page_config(layout="wide")`
 - **Theme**: Full dark theme via CSS injection and `.streamlit/config.toml`
-- **No Sidebar Filters**: All data displayed by default (filters removed per user request)
+- **Disclaimer**: Caption displayed below the title stating this is not financial advice
+- **Time Period Filter**: Radio buttons (5 Years, 10 Years, All Data) to filter charts 1–8 by date range. The Relative Strength Matrix (Chart 9) always uses full data.
+- **Chart Descriptions**: Each chart has a short `st.caption` below the header explaining what it shows and how to interpret it
 - **Main Area**:
-  - Title & Data Range display
-  - 9 Charts (see below)
+  - Title, disclaimer & Data Range display
+  - Time period radio buttons
+  - 9 Charts with descriptive captions (see below)
   - *Note: No raw data table displayed.*
 
 #### Data Layer (inline in `app.py`)
-- `load_data()` function decorated with `@st.cache_data`.
+- `load_data(_file_hash)` function decorated with `@st.cache_data`.
+- **Cache Busting**: A `_file_hash()` helper returns the modification time of `Data.csv` via `os.path.getmtime()`. This is passed as a parameter to `load_data()`, so the cache automatically invalidates whenever the CSV file changes — ensuring fresh data on both local and Streamlit Cloud deployments.
 - Reads `Data.csv` using `pd.read_csv`.
 - Parses dates: `pd.to_datetime(df['Date'], format='%d-%b-%y')`.
 - **Handles comma-separated numbers**: Removes commas before converting to numeric (e.g., "7,751.60" → 7751.60).
@@ -160,3 +164,4 @@ textColor = "#fafafa"
   - Chart 7 (Market Breadth): Breadth participation via indices above 40w SMA
   - Chart 8 (Sector Drawdown): Average distance from 52-week highs
   - Chart 9 (Relative Strength Matrix): Detailed explanation with Bank/Auto example, score and ranking interpretation
+- **Cache Busting Fix**: `@st.cache_data` was serving stale data on Streamlit Cloud after CSV updates. Fixed by passing `os.path.getmtime('Data.csv')` as a cache key parameter (`_file_hash`) to `load_data()`. The cache now automatically invalidates when the CSV file is modified.
