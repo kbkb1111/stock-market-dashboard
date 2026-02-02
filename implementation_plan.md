@@ -40,21 +40,21 @@ Create a personal Stock Market Dashboard using **Streamlit** to visualize histor
 
 #### Charts Implementation
 
-- **Trend Analysis**
-  - **Metric**: Nifty TRI (Total Return Index)
+- **Nifty Total Return Index with 40-Week SMA**
+  - **Metric**: Nifty Total Return Index
   - **Overlays**: 40-week Simple Moving Average (SMA)
   - **Logic**: `df['Nifty TRI'].rolling(window=40).mean()`
 
-- **Price Channels**
-  - **Metric**: Nifty TRI
+- **Nifty Total Return Index with Price Channels**
+  - **Metric**: Nifty Total Return Index
   - **Overlays**:
     - **26-Week High**: Previous 26 weeks high (excluding current week)
       - Logic: `df['Nifty TRI'].shift(1).rolling(window=26).max()`
     - **52-Week Low**: Previous 52 weeks low (excluding current week)
       - Logic: `df['Nifty TRI'].shift(1).rolling(window=52).min()`
 
-- **Nifty vs 10-Year Bond**
-  - **Metric**: Ratio = `Nifty TRI` / `S&P 10 Yr index`
+- **Nifty Total Return Index vs 10-Year Bond Index**
+  - **Metric**: Ratio = `Nifty Total Return Index` / `Nifty 10 year G-Sec Index`
   - **Overlays**: 40-week SMA of the Ratio
 
 - **Nifty vs Gold**
@@ -143,3 +143,20 @@ textColor = "#fafafa"
 
 ### Deployment Verification
 1. Push a minor change and verify the Streamlit app updates online
+
+## Changelog
+
+### 2 Feb 2026
+- **Time Period Filter**: Added 3 radio buttons (5 Years, 10 Years, All Data) at the top of the dashboard. All charts (1–8) respect the selected filter. The Relative Strength Matrix (Chart 9) always uses the full dataset.
+- **Accurate Rolling Indicators**: Rolling calculations (40w SMA, 26w High, 52w Low, drawdowns) are computed on the full dataset first, then sliced to the selected time range. This ensures indicators are accurate even at the start of a filtered range.
+- **Disclaimer**: Added a disclaimer caption below the title: "This is not financial advice. This is a personal analytical project for educational purposes only."
+- **Chart Descriptions**: Added a short `st.caption` below each chart header explaining what the visual shows and how to interpret it:
+  - Chart 1 (Nifty TRI + 40w SMA): Trend direction via price vs SMA
+  - Chart 2 (Price Channels): Momentum signals via 26w high / 52w low breakouts
+  - Chart 3 (Equity vs Bonds): Relative performance ratio
+  - Chart 4 (Nifty vs Gold): Equity-gold relative strength
+  - Chart 5 (Mid Cap vs Nifty): Mid-cap relative performance and risk appetite
+  - Chart 6 (Small Cap vs Nifty): Small-cap leadership and risk-on/off signals
+  - Chart 7 (Market Breadth): Breadth participation via indices above 40w SMA
+  - Chart 8 (Sector Drawdown): Average distance from 52-week highs
+  - Chart 9 (Relative Strength Matrix): Detailed explanation with Bank/Auto example, score and ranking interpretation

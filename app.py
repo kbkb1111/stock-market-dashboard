@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from dateutil.relativedelta import relativedelta
 
 # Page Configuration
 st.set_page_config(
@@ -76,78 +77,103 @@ def load_data():
 # Load Data
 df = load_data()
 
-# Use all data (no filtering)
-df_filtered = df
-
 # Main Title
 st.title("Stock Market Dashboard")
+st.caption("Disclaimer: This is not financial advice. This is a personal analytical project for educational purposes only.")
+
+# Time Period Filter Buttons
+time_period = st.radio(
+    "Select Time Period",
+    options=["5 Years", "10 Years", "All Data"],
+    horizontal=True,
+    index=0
+)
+
+latest_date = df.index.max()
+if time_period == "5 Years":
+    start_date = latest_date - relativedelta(years=5)
+    df_filtered = df[df.index >= start_date]
+elif time_period == "10 Years":
+    start_date = latest_date - relativedelta(years=10)
+    df_filtered = df[df.index >= start_date]
+else:
+    df_filtered = df
+
 st.markdown(f"**Data Range:** {df_filtered.index.min().strftime('%d-%b-%Y')} to {df_filtered.index.max().strftime('%d-%b-%Y')}")
 
 # ============================================
 # Chart 1: Trend Analysis (Nifty TRI + 40w SMA)
 # ============================================
-st.header("Trend Analysis")
+st.header("Nifty Total Return Index with 40-Week SMA")
+st.caption("Tracks the Nifty TRI against its 40-week simple moving average to identify long-term trend direction. Price above the SMA suggests a bullish trend, below suggests bearish.")
 if 'Nifty TRI' in df_filtered.columns:
-    df_chart1 = df_filtered[['Nifty TRI']].copy()
+    df_chart1 = df[['Nifty TRI']].copy()
     df_chart1['40w SMA'] = df_chart1['Nifty TRI'].rolling(window=40).mean()
+    df_chart1 = df_chart1.loc[df_filtered.index]
 
     fig1 = go.Figure()
     fig1.add_trace(go.Scatter(x=df_chart1.index, y=df_chart1['Nifty TRI'], name='Nifty TRI', line=dict(color='#00BFFF')))
     fig1.add_trace(go.Scatter(x=df_chart1.index, y=df_chart1['40w SMA'], name='40w SMA', line=dict(color='#FF6347', dash='dash')))
     fig1.update_layout(title='Nifty TRI with 40-Week SMA', xaxis_title='Date', yaxis_title='Value', height=400, **CHART_LAYOUT)
-    st.plotly_chart(fig1, use_container_width=True)
+    st.plotly_chart(fig1, width='stretch')
 else:
     st.warning("Nifty TRI data not available")
 
 # ============================================
 # Chart 2: Price Channels (26w High / 52w Low)
 # ============================================
-st.header("Price Channels")
+st.header("Nifty Total Return Index with Price Channels")
+st.caption("Plots the 26-week high and 52-week low as price channels around the Nifty TRI. Breakouts above the 26-week high or breakdowns below the 52-week low can signal momentum shifts.")
 if 'Nifty TRI' in df_filtered.columns:
-    df_chart2 = df_filtered[['Nifty TRI']].copy()
+    df_chart2 = df[['Nifty TRI']].copy()
     df_chart2['26w High'] = df_chart2['Nifty TRI'].shift(1).rolling(window=26).max()
     df_chart2['52w Low'] = df_chart2['Nifty TRI'].shift(1).rolling(window=52).min()
+    df_chart2 = df_chart2.loc[df_filtered.index]
 
     fig2 = go.Figure()
     fig2.add_trace(go.Scatter(x=df_chart2.index, y=df_chart2['Nifty TRI'], name='Nifty TRI', line=dict(color='#00BFFF')))
     fig2.add_trace(go.Scatter(x=df_chart2.index, y=df_chart2['26w High'], name='26w High', line=dict(color='#32CD32', dash='dot')))
     fig2.add_trace(go.Scatter(x=df_chart2.index, y=df_chart2['52w Low'], name='52w Low', line=dict(color='#FF4500', dash='dot')))
     fig2.update_layout(title='Nifty TRI Price Channels', xaxis_title='Date', yaxis_title='Value', height=400, **CHART_LAYOUT)
-    st.plotly_chart(fig2, use_container_width=True)
+    st.plotly_chart(fig2, width='stretch')
 else:
     st.warning("Nifty TRI data not available")
 
 # ============================================
-# Chart 3: Bond Ratio (Nifty TRI / S&P 10 Yr index)
+# Chart 3: Bond Ratio (Nifty TRI / Nifty 10 year G-Sec Index)
 # ============================================
-st.header("Nifty vs 10-Year Bond")
-if 'Nifty TRI' in df_filtered.columns and 'S&P 10 Yr index' in df_filtered.columns:
-    df_chart3 = pd.DataFrame(index=df_filtered.index)
-    df_chart3['Ratio'] = df_filtered['Nifty TRI'] / df_filtered['S&P 10 Yr index']
+st.header("Nifty Total Return Index vs 10-Year Bond Index")
+st.caption("Compares equity (Nifty TRI) to bonds (10-Year G-Sec Index) as a ratio. A rising ratio indicates equities outperforming bonds, while a falling ratio favours bonds.")
+if 'Nifty TRI' in df_filtered.columns and 'Nifty 10 year G-Sec Index' in df_filtered.columns:
+    df_chart3 = pd.DataFrame(index=df.index)
+    df_chart3['Ratio'] = df['Nifty TRI'] / df['Nifty 10 year G-Sec Index']
     df_chart3['40w SMA'] = df_chart3['Ratio'].rolling(window=40).mean()
+    df_chart3 = df_chart3.loc[df_filtered.index]
 
     fig3 = go.Figure()
     fig3.add_trace(go.Scatter(x=df_chart3.index, y=df_chart3['Ratio'], name='Nifty TRI / Bond', line=dict(color='#9370DB')))
     fig3.add_trace(go.Scatter(x=df_chart3.index, y=df_chart3['40w SMA'], name='40w SMA', line=dict(color='#FFD700', dash='dash')))
     fig3.update_layout(title='Nifty TRI Relative to 10-Year Bond Index', xaxis_title='Date', yaxis_title='Ratio', height=400, **CHART_LAYOUT)
-    st.plotly_chart(fig3, use_container_width=True)
+    st.plotly_chart(fig3, width='stretch')
 else:
-    st.warning("Required data (Nifty TRI, S&P 10 Yr index) not available")
+    st.warning("Required data (Nifty TRI, Nifty 10 year G-Sec Index) not available")
 
 # ============================================
 # Chart 4: Gold Ratio (Nifty / GoldBees)
 # ============================================
 st.header("Nifty vs Gold")
+st.caption("Ratio of Nifty to GoldBees. A rising ratio means equities are outperforming gold, while a falling ratio suggests gold is a stronger relative performer.")
 if 'Nifty' in df_filtered.columns and 'GoldBees' in df_filtered.columns:
-    df_chart4 = pd.DataFrame(index=df_filtered.index)
-    df_chart4['Ratio'] = df_filtered['Nifty'] / df_filtered['GoldBees']
+    df_chart4 = pd.DataFrame(index=df.index)
+    df_chart4['Ratio'] = df['Nifty'] / df['GoldBees']
     df_chart4['40w SMA'] = df_chart4['Ratio'].rolling(window=40).mean()
+    df_chart4 = df_chart4.loc[df_filtered.index]
 
     fig4 = go.Figure()
     fig4.add_trace(go.Scatter(x=df_chart4.index, y=df_chart4['Ratio'], name='Nifty / Gold', line=dict(color='#FFD700')))
     fig4.add_trace(go.Scatter(x=df_chart4.index, y=df_chart4['40w SMA'], name='40w SMA', line=dict(color='#FF6347', dash='dash')))
     fig4.update_layout(title='Nifty Relative to Gold (GoldBees)', xaxis_title='Date', yaxis_title='Ratio', height=400, **CHART_LAYOUT)
-    st.plotly_chart(fig4, use_container_width=True)
+    st.plotly_chart(fig4, width='stretch')
 else:
     st.warning("Required data (Nifty, GoldBees) not available")
 
@@ -155,16 +181,18 @@ else:
 # Chart 5: MidCap Ratio (Mid Cap / Nifty)
 # ============================================
 st.header("Mid Cap vs Nifty")
+st.caption("Ratio of Mid Cap index to Nifty. A rising ratio indicates mid-cap stocks outperforming large caps, often seen during broad market rallies with higher risk appetite.")
 if 'Nifty' in df_filtered.columns and 'Mid Cap' in df_filtered.columns:
-    df_chart5 = pd.DataFrame(index=df_filtered.index)
-    df_chart5['Ratio'] = df_filtered['Mid Cap'] / df_filtered['Nifty']
+    df_chart5 = pd.DataFrame(index=df.index)
+    df_chart5['Ratio'] = df['Mid Cap'] / df['Nifty']
     df_chart5['40w SMA'] = df_chart5['Ratio'].rolling(window=40).mean()
+    df_chart5 = df_chart5.loc[df_filtered.index]
 
     fig5 = go.Figure()
     fig5.add_trace(go.Scatter(x=df_chart5.index, y=df_chart5['Ratio'], name='Mid Cap / Nifty', line=dict(color='#20B2AA')))
     fig5.add_trace(go.Scatter(x=df_chart5.index, y=df_chart5['40w SMA'], name='40w SMA', line=dict(color='#FF6347', dash='dash')))
     fig5.update_layout(title='Mid Cap Relative to Nifty', xaxis_title='Date', yaxis_title='Ratio', height=400, **CHART_LAYOUT)
-    st.plotly_chart(fig5, use_container_width=True)
+    st.plotly_chart(fig5, width='stretch')
 else:
     st.warning("Required data (Nifty, Mid Cap) not available")
 
@@ -172,16 +200,18 @@ else:
 # Chart 6: SmallCap Ratio (Small Cap / Nifty)
 # ============================================
 st.header("Small Cap vs Nifty")
+st.caption("Ratio of Small Cap index to Nifty. A rising ratio signals small caps leading the market, typically during risk-on phases. A declining ratio suggests a flight to quality.")
 if 'Nifty' in df_filtered.columns and 'Small Cap' in df_filtered.columns:
-    df_chart6 = pd.DataFrame(index=df_filtered.index)
-    df_chart6['Ratio'] = df_filtered['Small Cap'] / df_filtered['Nifty']
+    df_chart6 = pd.DataFrame(index=df.index)
+    df_chart6['Ratio'] = df['Small Cap'] / df['Nifty']
     df_chart6['40w SMA'] = df_chart6['Ratio'].rolling(window=40).mean()
+    df_chart6 = df_chart6.loc[df_filtered.index]
 
     fig6 = go.Figure()
     fig6.add_trace(go.Scatter(x=df_chart6.index, y=df_chart6['Ratio'], name='Small Cap / Nifty', line=dict(color='#BA55D3')))
     fig6.add_trace(go.Scatter(x=df_chart6.index, y=df_chart6['40w SMA'], name='40w SMA', line=dict(color='#FF6347', dash='dash')))
     fig6.update_layout(title='Small Cap Relative to Nifty', xaxis_title='Date', yaxis_title='Ratio', height=400, **CHART_LAYOUT)
-    st.plotly_chart(fig6, use_container_width=True)
+    st.plotly_chart(fig6, width='stretch')
 else:
     st.warning("Required data (Nifty, Small Cap) not available")
 
@@ -189,25 +219,26 @@ else:
 # Chart 7: Market Breadth Analysis (3 subplots)
 # ============================================
 st.header("Market Breadth Analysis")
+st.caption("Shows how many sector and broad market indices are trading above their 40-week SMA. High counts indicate broad participation in a rally; low counts suggest narrowing breadth and potential weakness.")
 
 # Calculate SMAs and count indices above SMA
 available_sectors = [idx for idx in SECTOR_INDICES if idx in df_filtered.columns]
 available_broad = [idx for idx in BROAD_INDICES if idx in df_filtered.columns]
 
 if available_sectors and available_broad and 'Nifty' in df_filtered.columns:
-    # Calculate 40w SMA for each sector index
-    sector_above_sma = pd.DataFrame(index=df_filtered.index)
+    # Calculate 40w SMA for each sector index (on full data, then slice)
+    sector_above_sma = pd.DataFrame(index=df.index)
     for sector in available_sectors:
-        sma = df_filtered[sector].rolling(window=40).mean()
-        sector_above_sma[sector] = (df_filtered[sector] > sma).fillna(False).astype(int)
-    sector_count = sector_above_sma.sum(axis=1)
+        sma = df[sector].rolling(window=40).mean()
+        sector_above_sma[sector] = (df[sector] > sma).fillna(False).astype(int)
+    sector_count = sector_above_sma.sum(axis=1).loc[df_filtered.index]
 
-    # Calculate 40w SMA for each broad index
-    broad_above_sma = pd.DataFrame(index=df_filtered.index)
+    # Calculate 40w SMA for each broad index (on full data, then slice)
+    broad_above_sma = pd.DataFrame(index=df.index)
     for broad in available_broad:
-        sma = df_filtered[broad].rolling(window=40).mean()
-        broad_above_sma[broad] = (df_filtered[broad] > sma).fillna(False).astype(int)
-    broad_count = broad_above_sma.sum(axis=1)
+        sma = df[broad].rolling(window=40).mean()
+        broad_above_sma[broad] = (df[broad] > sma).fillna(False).astype(int)
+    broad_count = broad_above_sma.sum(axis=1).loc[df_filtered.index]
 
     # Create subplots
     fig7 = make_subplots(
@@ -232,7 +263,7 @@ if available_sectors and available_broad and 'Nifty' in df_filtered.columns:
     fig7.update_yaxes(title_text='Price', row=1, col=1)
     fig7.update_yaxes(title_text='Count', range=[0, 10], row=2, col=1)
     fig7.update_yaxes(title_text='Count', range=[0, 7], row=3, col=1)
-    st.plotly_chart(fig7, use_container_width=True)
+    st.plotly_chart(fig7, width='stretch')
 else:
     st.warning("Required sector/broad index data not available")
 
@@ -240,17 +271,17 @@ else:
 # Chart 8: Sector Distance from 52-Week High
 # ============================================
 st.header("Sector Average Drawdown from 52-Week High")
+st.caption("Measures how far sector indices have fallen from their 52-week highs on average. Values near 0 mean sectors are near their peaks; deeper negative values indicate widespread corrections.")
 
 if available_sectors:
-    # Calculate drawdown for each sector: (Close - 52WeekMax) / 52WeekMax, capped at 0
-    drawdown_df = pd.DataFrame(index=df_filtered.index)
+    # Calculate drawdown for each sector on full data, then slice
+    drawdown_df = pd.DataFrame(index=df.index)
     for sector in available_sectors:
-        high_52w = df_filtered[sector].shift(1).rolling(window=52).max()
-        drawdown = (df_filtered[sector] - high_52w) / high_52w
-        drawdown_df[sector] = drawdown.clip(upper=0)  # Cap at 0 (no positive values)
+        high_52w = df[sector].shift(1).rolling(window=52).max()
+        drawdown = (df[sector] - high_52w) / high_52w
+        drawdown_df[sector] = drawdown.clip(upper=0)
 
-    # Average of all sector drawdowns (0 = all at highs, negative = below highs)
-    avg_drawdown = drawdown_df.mean(axis=1)
+    avg_drawdown = drawdown_df.mean(axis=1).loc[df_filtered.index]
 
     fig8 = go.Figure()
     fig8.add_trace(go.Scatter(x=df_filtered.index.tolist(), y=avg_drawdown.values, name='Average Drawdown', fill='tozeroy', line=dict(color='#FF6347')))
@@ -261,7 +292,7 @@ if available_sectors:
         height=400,
         **CHART_LAYOUT
     )
-    st.plotly_chart(fig8, use_container_width=True)
+    st.plotly_chart(fig8, width='stretch')
 else:
     st.warning("Sector index data not available")
 
@@ -269,12 +300,13 @@ else:
 # Chart 9: Inter Market Relative Strength Matrix
 # ============================================
 st.header("Inter Market Relative Strength Matrix")
+st.caption("Compares each sector against every other sector and if the ratio is above its 40 week MA then it is assigned a \"Y\". Example: if the ratio of Bank (row) divided by Auto (column) is higher than its 40 week moving average then \"Y\". A high score (i.e. more \"Y\") means the sector is outperforming more peers. Change column shows ranking shift over 4 weeks.")
 
-if len(available_sectors) >= 2 and len(df_filtered) > 40:
-    # Get latest date and date 4 weeks ago
-    latest_date = df_filtered.index[-1]
-    date_4w_ago_idx = max(0, len(df_filtered) - 5)  # Approximate 4 weeks back
-    date_4w_ago = df_filtered.index[date_4w_ago_idx]
+if len(available_sectors) >= 2 and len(df) > 40:
+    # Get latest date and date 4 weeks ago (always use full data for matrix)
+    latest_date = df.index[-1]
+    date_4w_ago_idx = max(0, len(df) - 5)  # Approximate 4 weeks back
+    date_4w_ago = df.index[date_4w_ago_idx]
 
     def calculate_rs_matrix(data):
         """Calculate relative strength matrix for given data slice."""
@@ -292,11 +324,11 @@ if len(available_sectors) >= 2 and len(df_filtered) > 40:
                             matrix.loc[row_idx, col_idx] = 1
         return matrix
 
-    # Current matrix
-    current_matrix = calculate_rs_matrix(df_filtered)
+    # Current matrix (always full data)
+    current_matrix = calculate_rs_matrix(df)
 
     # Matrix 4 weeks ago
-    df_4w_ago = df_filtered.iloc[:date_4w_ago_idx + 1]
+    df_4w_ago = df.iloc[:date_4w_ago_idx + 1]
     if len(df_4w_ago) > 40:
         past_matrix = calculate_rs_matrix(df_4w_ago)
     else:
@@ -340,7 +372,7 @@ if len(available_sectors) >= 2 and len(df_filtered) > 40:
             yaxis_title='Row Index',
             **CHART_LAYOUT
         )
-        st.plotly_chart(fig9, use_container_width=True)
+        st.plotly_chart(fig9, width='stretch')
 
     with col2:
         st.subheader("Sector Rankings")

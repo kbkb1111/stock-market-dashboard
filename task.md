@@ -19,9 +19,9 @@
         - [x] Dark theme CSS styling applied
         - [x] Sidebar filters removed (showing all data by default)
     - [x] **Dashboard Components**
-        - [x] Trend Analysis (Nifty TRI + 40w SMA)
-        - [x] Price Channels (26w High / 52w Low)
-        - [x] Nifty vs 10-Year Bond (Ratio + 40w SMA)
+        - [x] Nifty Total Return Index with 40-Week SMA
+        - [x] Nifty Total Return Index with Price Channels
+        - [x] Nifty Total Return Index vs 10-Year Bond Index
         - [x] Nifty vs Gold (Ratio + 40w SMA)
         - [x] Mid Cap vs Nifty (Mid Cap / Nifty + 40w SMA)
         - [x] Small Cap vs Nifty (Small Cap / Nifty + 40w SMA)
@@ -36,3 +36,11 @@
     - [x] Commit `Data.csv` and code to GitHub
     - [x] Deploy to Streamlit Community Cloud
     - [x] Document update process (Replace CSV -> Run Local -> Push)
+
+- [x] **Enhancements (2 Feb 2026)**
+    - [x] Time period filter buttons (5 Years, 10 Years, All Data)
+    - [x] Rolling indicators computed on full data before slicing for accuracy
+    - [x] Relative Strength Matrix excluded from time filtering (always uses all data)
+    - [x] Disclaimer added at top of dashboard
+    - [x] Descriptive captions added below each chart header
+    - [x] Updated Relative Strength Matrix description with detailed example
